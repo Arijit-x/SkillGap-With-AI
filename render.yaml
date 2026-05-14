@@ -1,0 +1,14 @@
+services:
+  - type: web
+    name: skillgap-backend
+    runtime: node
+    rootDir: server
+    buildCommand: npm install
+    startCommand: node index.js
+    envVars:
+      - key: PORT
+        value: 10000
+      - key: GOOGLE_AI_API_KEY
+        sync: false       # you'll fill this in the Render dashboard
+      - key: GITHUB_TOKEN
+        sync: false       # you'll fill this in the Render dashboard

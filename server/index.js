@@ -8,7 +8,21 @@ const app = express();
 const PORT = process.env.PORT || 5000;
 
 // Middleware
-app.use(cors());
+const allowedOrigins = [
+  "http://localhost:3000",
+  /\.vercel\.app$/,           // all Vercel preview & production URLs
+];
+app.use(cors({
+  origin: (origin, callback) => {
+    // allow server-to-server / curl with no origin
+    if (!origin) return callback(null, true);
+    const allowed = allowedOrigins.some((o) =>
+      typeof o === "string" ? o === origin : o.test(origin)
+    );
+    callback(allowed ? null : new Error("CORS: origin not allowed"), allowed);
+  },
+  credentials: true,
+}));
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
