@@ -38,7 +38,8 @@ export default function ResumeAnalysis() {
     formData.append("targetRole", targetRole);
 
     try {
-      const response = await axios.post("http://localhost:5000/api/analyze/resume", formData, {
+      const apiUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000";
+      const response = await axios.post(`${apiUrl}/api/analyze/resume`, formData, {
         headers: { "Content-Type": "multipart/form-data" }
       });
       setResult(response.data);
