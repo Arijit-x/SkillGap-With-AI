@@ -1,0 +1,16 @@
+{
+  "name": "skillgap-ai",
+  "version": "1.0.0",
+  "description": "AI-powered career intelligence platform",
+  "main": "index.js",
+  "scripts": {
+    "start": "node index.js"
+  },
+  "keywords": [
+    "ai",
+    "career",
+    "resume"
+  ],
+  "author": "Arijit Patra",
+  "license": "MIT"
+}
