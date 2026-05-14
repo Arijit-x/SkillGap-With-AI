@@ -11,6 +11,7 @@ const PORT = process.env.PORT || 5000;
 const allowedOrigins = [
   "http://localhost:3000",
   /\.vercel\.app$/,           // all Vercel preview & production URLs
+  /\.netlify\.app$/,          // all Netlify preview & production URLs
 ];
 app.use(cors({
   origin: (origin, callback) => {
