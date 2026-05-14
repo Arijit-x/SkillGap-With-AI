@@ -133,9 +133,19 @@ async function analyzeSkills(resumeText, targetRole, fileBuffer = null) {
       const roleEmbedding = await getEmbedding(roleSkillsText);
       const similarity = cosineSimilarity(candidateEmbedding, roleEmbedding);
       
-      // Convert Cosine Similarity to a percentage score (scale it nicely)
-      const rawScore = Math.round(similarity * 100);
-      parsed.readinessScore = Math.min(100, Math.max(0, rawScore));
+      // text-embedding-004 similarity is usually 0.6-1.0. Scale it to 0-100:
+      const scaledMLScore = Math.max(0, Math.min(100, (similarity - 0.6) * 250));
+      
+      // Calculate exact match ratio (Jaccard-ish)
+      const missingCount = (parsed.missingSkills || []).length;
+      const extractedCount = (parsed.extractedSkills || []).length;
+      const totalCount = missingCount + extractedCount;
+      const exactScore = totalCount > 0 ? (extractedCount / totalCount) * 100 : 0;
+      
+      // Hybrid ML Score: Average of Semantic Similarity and Exact Skills Match
+      const finalScore = Math.round((scaledMLScore * 0.4) + (exactScore * 0.6));
+      
+      parsed.readinessScore = Math.min(100, Math.max(0, finalScore));
     } else {
       parsed.readinessScore = 0;
     }
@@ -187,8 +197,16 @@ async function analyzeGitHubProfile(profileData, reposData, targetRole) {
       const roleEmbedding = await getEmbedding(roleSkillsText);
       const similarity = cosineSimilarity(candidateEmbedding, roleEmbedding);
       
-      const rawScore = Math.round(similarity * 100);
-      parsed.readinessScore = Math.min(100, Math.max(0, rawScore));
+      const scaledMLScore = Math.max(0, Math.min(100, (similarity - 0.6) * 250));
+      
+      const missingCount = (parsed.weaknesses || []).length;
+      const detectedCount = (parsed.detectedSkills || []).length;
+      const totalCount = missingCount + detectedCount;
+      const exactScore = totalCount > 0 ? (detectedCount / totalCount) * 100 : 0;
+      
+      const finalScore = Math.round((scaledMLScore * 0.4) + (exactScore * 0.6));
+      
+      parsed.readinessScore = Math.min(100, Math.max(0, finalScore));
     } else {
       parsed.readinessScore = 0;
     }
