@@ -14,15 +14,25 @@ router.post("/analyze", async (req, res) => {
     let profileData, reposData;
 
     try {
+      const headers = process.env.GITHUB_TOKEN ? { Authorization: `Bearer ${process.env.GITHUB_TOKEN}` } : {};
+      
       // Fetch GitHub Profile
-      const profileResponse = await fetch(`https://api.github.com/users/${username}`);
+      const profileResponse = await fetch(`https://api.github.com/users/${username}`, { headers });
       if (!profileResponse.ok) {
+        if (profileResponse.status === 403 || profileResponse.status === 429) {
+          throw new Error("GitHub API rate limit exceeded");
+        }
         return res.status(404).json({ error: "GitHub user not found" });
       }
       profileData = await profileResponse.json();
 
       // Fetch Repositories
-      const reposResponse = await fetch(`https://api.github.com/users/${username}/repos?sort=updated&per_page=10`);
+      const reposResponse = await fetch(`https://api.github.com/users/${username}/repos?sort=updated&per_page=10`, { headers });
+      if (!reposResponse.ok) {
+        if (reposResponse.status === 403 || reposResponse.status === 429) {
+          throw new Error("GitHub API rate limit exceeded");
+        }
+      }
       reposData = await reposResponse.json();
     } catch (networkError) {
       console.warn("GitHub API fetch failed (Network/DNS issue). Using mock data:", networkError.message);

@@ -37,33 +37,35 @@ async function getEmbedding(text) {
 }
 
 
+const mockGithub = {
+  readinessScore: 75,
+  detectedSkills: ["JavaScript", "React", "Node.js", "MongoDB", "Express", "TypeScript"],
+  requiredRoleSkills: ["JavaScript", "React", "Node.js", "MongoDB", "TypeScript", "Docker"],
+  strengths: ["Consistent commit history", "Experience with modern web frameworks", "Good documentation practices"],
+  weaknesses: ["Lack of testing in repositories", "Fewer contributions to open-source organizations"],
+  recommendations: ["Add unit and integration tests to your top repos", "Contribute to larger open-source projects", "Write more detailed architecture documentation"]
+};
+
+const mockResume = {
+  readinessScore: 82,
+  extractedSkills: ["JavaScript", "React", "Node.js", "MongoDB", "Express"],
+  requiredSkills: ["JavaScript", "React", "Node.js", "MongoDB", "Express", "Docker", "AWS", "CI/CD"],
+  missingSkills: ["Docker", "AWS", "CI/CD", "TypeScript"],
+  roadmap: [
+    "Learn Docker fundamentals and containerize your current full-stack app",
+    "Set up a CI/CD pipeline using GitHub Actions",
+    "Deploy your containerized app to AWS ECS or similar service",
+    "Migrate one of your React projects to TypeScript"
+  ],
+  projectRecommendations: [
+    { title: "DevOps Pipeline setup", description: "Create a full CI/CD pipeline for your existing React/Node app using GitHub Actions and Docker." },
+    { title: "Cloud Deployment", description: "Deploy an application to AWS using ECS and RDS to show cloud proficiency." }
+  ]
+};
+
 async function generateAIResponse(prompt, isGithub = false, fileBuffer = null) {
   if (!process.env.GEMINI_API_KEY || process.env.GEMINI_API_KEY === "your_gemini_api_key_here") {
     console.warn("Using mock AI response because GEMINI_API_KEY is not configured.");
-    
-    const mockGithub = {
-      readinessScore: 75,
-      strengths: ["Consistent commit history", "Experience with modern web frameworks", "Good documentation practices"],
-      weaknesses: ["Lack of testing in repositories", "Fewer contributions to open-source organizations"],
-      recommendations: ["Add unit and integration tests to your top repos", "Contribute to larger open-source projects", "Write more detailed architecture documentation"]
-    };
-
-    const mockResume = {
-      readinessScore: 82,
-      extractedSkills: ["JavaScript", "React", "Node.js", "MongoDB", "Express"],
-      missingSkills: ["Docker", "AWS", "CI/CD", "TypeScript"],
-      roadmap: [
-        "Learn Docker fundamentals and containerize your current full-stack app",
-        "Set up a CI/CD pipeline using GitHub Actions",
-        "Deploy your containerized app to AWS ECS or similar service",
-        "Migrate one of your React projects to TypeScript"
-      ],
-      projectRecommendations: [
-        { title: "DevOps Pipeline setup", description: "Create a full CI/CD pipeline for your existing React/Node app using GitHub Actions and Docker." },
-        { title: "Cloud Deployment", description: "Deploy an application to AWS using ECS and RDS to show cloud proficiency." }
-      ]
-    };
-
     return JSON.stringify(isGithub ? mockGithub : mockResume);
   }
 
@@ -91,6 +93,11 @@ async function generateAIResponse(prompt, isGithub = false, fileBuffer = null) {
     return response.text;
   } catch (error) {
     console.error("Gemini API Error:", error.message || error);
+    // If API is unavailable due to high demand (503), fall back to mock data
+    if ((error.message && error.message.includes("503")) || error.status === 503 || error.status === "UNAVAILABLE" || (error.message && error.message.includes("UNAVAILABLE"))) {
+      console.warn("Gemini API is unavailable (503). Falling back to mock data.");
+      return JSON.stringify(isGithub ? mockGithub : mockResume);
+    }
     throw new Error("Failed to communicate with Gemini API: " + (error.message || "Unknown error"));
   }
 }
